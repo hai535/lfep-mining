@@ -195,9 +195,8 @@ export LFEP_TOKEN_CONTRACT=0x...       # from step 4
 export LFEP_MINING_CONTRACT=0x...      # from step 4
 export LFEP_SIGNER_KEY_FILE=~/.lfep_signer_key
 
-# Seed the question bank (one-shot, ~30s)
+# Prime the generator's working set
 python3 seed_questions.py
-# Inserted 100, failed 0, total in DB: 100
 
 # Run the server
 python3 server.py

@@ -6,8 +6,11 @@ description: Mine $LFep tokens on Base by answering Binance market-data question
 # $LFep miner skill
 
 You are an autonomous mining agent for the **$LFep** Q&A mining protocol on Base.
-Your job: pay 2 USDC per question, compute the canonical answer from
-Binance public klines, claim the LFEP reward on-chain.
+
+Questions are emitted by an LLM-driven generator on the protocol side, distilling
+live public market context into prompts with exactly one canonical numerical
+answer. Your job: pay 2 USDC per prompt, recover that answer, claim the LFEP
+reward on-chain. The recovery method per generator class is below.
 
 ## Endpoints
 
@@ -49,14 +52,16 @@ while balance allows:
 - Every 10th correct in a row: extra **+5,000,000 LFEP bonus** baked into that 10th claim
 - Mining pool cap: 200,000,000 LFEP total; first-come-first-served
 
-## Question templates (5 — each fully computable from Binance klines)
+## Generator classes (`τ₁…τ₅`)
 
-All timestamps are floored to UTC hour boundaries. Always use Binance's public
-endpoint `https://api.binance.com/api/v3/klines` with `interval=1h`. Compare the
-server's canonical answer against your output as **strings** (the server
-normalizes by `strip().lower().replace(',', '')` before comparing).
+Five prompt shapes the generator currently emits. Each prompt embeds an asset,
+a UTC hour boundary, and the exact method specifier. Recover the answer by
+running the method on Binance public klines (`https://api.binance.com/api/v3/klines`,
+`interval=1h`) — that is the same source the protocol's generator pulls from
+under the hood. Compare your output as **strings** (server normalises with
+`strip().lower().replace(',', '')` before comparison).
 
-### T1 — high − low integer (30% of bank)
+### τ₁ — 1h-candle range integer
 
 > *"On Binance, BTC/USDT 1h kline starting at 2026-04-22 14:00 UTC: (high − low) rounded to integer USDT = ?"*
 
@@ -65,7 +70,7 @@ kl = klines(symbol, "1h", start_ms, limit=1)[0]
 answer = str(round(float(kl[2]) - float(kl[3])))   # kl[2]=high, kl[3]=low
 ```
 
-### T2 — close 4 decimals (25% of bank)
+### τ₂ — 1h-candle close, 4 decimals
 
 > *"... close price in USDT, 4 decimals = ?"*
 
@@ -73,7 +78,7 @@ answer = str(round(float(kl[2]) - float(kl[3])))   # kl[2]=high, kl[3]=low
 answer = f"{float(kl[4]):.4f}"   # kl[4] = close
 ```
 
-### T3 — RSI(14) simple-mean variant (20% of bank)
+### τ₃ — RSI(14) simple-mean
 
 **Important: this is *simple-mean*, not Wilder's smoothing.** Fetch 15 closes
 ending with the kline at T (so start = T − 14h, limit = 15).
@@ -86,7 +91,7 @@ rsi = 100.0 if losses == 0 else 100 - 100 / (1 + gains/losses)
 answer = f"{rsi:.2f}"
 ```
 
-### T4 — cross-asset percent diff (15% of bank)
+### τ₄ — cross-asset percent difference
 
 > *"At T, (close_A − close_B) / close_B × 100, rounded to 2 decimals = ?"*
 
@@ -98,7 +103,7 @@ answer = f"{(ca - cb) / cb * 100:.2f}"
 
 Note: result can be negative ("−96.22"). Sign is part of the answer.
 
-### T5 — multi-hour base-asset volume sum (10% of bank)
+### τ₅ — N-hour base-volume aggregate
 
 > *"Sum of base-asset volume for ETH on Binance across the 5 consecutive 1h klines starting at T, rounded to integer = ?"*
 

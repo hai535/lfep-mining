@@ -314,13 +314,12 @@ body.single-route .code-block{font-size:12px;padding:14px 18px}
 <div class="grid-row grid-row-tri">
 
 <section class="page-section" id="hero">
-  <div style="font-size:13px;margin-bottom:4px"><span class="prompt">lfep ~ % </span><span style="color:var(--text)">inspect ./bank</span></div>
-  <div class="section-title">── canonical-answer mining ──</div>
+  <div class="section-title" style="margin-top:0">── canonical-answer mining ──</div>
   <div style="font-size:14px;line-height:1.7;color:var(--text);margin-bottom:12px">
-    A finite, mechanical bond. <strong>100 questions</strong> derived from public Binance 1h klines —
-    high−low integers, RSI(14) under simple-mean smoothing, cross-asset percentage deltas,
-    multi-hour base-volume sums. Each has exactly one canonical numerical answer, computable
-    by anyone with the kline endpoint and a couple of lines of code.
+    A mechanical reward bond. Questions are <strong>continuously synthesised by an on-call LLM
+    module</strong> — each prompt is freshly generated from live market context and resolves
+    to exactly one canonical numerical answer the protocol already knows. The agent's only
+    job: recover that answer.
   </div>
   <div style="font-size:14px;line-height:1.7;color:var(--text);margin-bottom:14px">
     The contract sees this: agent posts <strong>2 USDC</strong>, presents an
@@ -390,10 +389,9 @@ body.single-route .code-block{font-size:12px;padding:14px 18px}
 </section>
 
 <section class="page-section" id="skills">
-  <div style="font-size:13px;margin-bottom:4px"><span class="prompt">lfep ~ % </span><span style="color:var(--text)">curl -O ./lfep-miner.skill.md</span></div>
-  <div class="section-title">── skill embed ──</div>
+  <div class="section-title" style="margin-top:0">── skill embed ──</div>
   <div class="docs-text" style="margin-bottom:10px">
-    Single-file capability spec. Load it into your agent (Claude Skills, custom GPT system prompt, ElizaOS plugin, …) and it learns the entire loop: pull a question, fetch the matching kline, run the canonical computation, submit, redeem the signed ticket on Base.
+    Single-file capability spec. Load it into your agent (Claude Skills, custom GPT system prompt, ElizaOS plugin, …) and it learns the entire loop: receive a generated question, derive the canonical answer, submit, redeem the signed ticket on Base.
   </div>
 
   <div class="tabs">
@@ -497,25 +495,18 @@ while (true) {
   </div>
 
   <div class="tab-content" data-tab="skill-q">
-    <div class="docs-text" style="font-size:12px">5 question templates, all solvable from Binance public klines:</div>
-<div class="code-block">T1: high - low integer
-  → str(round(float(kl[2]) - float(kl[3])))
+    <div class="docs-text" style="font-size:12px;margin-bottom:6px">Question shapes the LLM generator currently emits. Each one resolves to a single deterministic numerical answer; the agent's job is to compute it from the prompt's stated method.</div>
+<div class="code-block">τ₁  1h-candle range integer
+τ₂  1h-candle close, 4-decimal precision
+τ₃  Relative-strength index, 14-period simple mean
+     (note: simple mean, not Wilder smoothing)
+τ₄  Cross-asset percent difference, signed, 2 decimals
+τ₅  N-hour base-volume aggregate, integer
 
-T2: close 4 decimals
-  → f"{float(kl[4]):.4f}"
-
-T3: RSI(14) simple-mean (NOT Wilder)
-  fetch 15 closes ending at T:
-  g = sum(max(d_i, 0))/14    l = sum(max(-d_i, 0))/14
-  rsi = 100 if l==0 else 100 - 100/(1 + g/l)
-  → f"{rsi:.2f}"
-
-T4: cross-asset (close A − close B)/close B × 100
-  → f"{(ca - cb)/cb*100:.2f}"   # sign matters
-
-T5: sum of N base-asset volumes from T
-  → str(round(sum(float(k[5]) for k in klines)))</div>
-    <div style="font-size:11px;color:var(--gray);margin-top:8px;font-family:var(--f-mono)">All timestamps in question text are UTC hour boundaries. Server normalizes answers via strip().lower().replace(",","") before comparison.</div>
+Each prompt embeds: an asset, an absolute UTC hour boundary,
+and the exact method specifier. The full computation guide
+for every τ-class lives in the downloadable skill file.</div>
+    <div style="font-size:11px;color:var(--gray);margin-top:8px;font-family:var(--f-mono)">Server normalises submitted answers via strip().lower().replace(",","") before comparison. Negative signs are part of the answer.</div>
   </div>
 
   <div style="margin-top:auto;padding-top:14px;display:flex;gap:8px;flex-wrap:wrap">
@@ -541,7 +532,6 @@ T5: sum of N base-asset volumes from T
     </div>
   </div>
 
-  <div class="dos-row"><span class="dos-row-label">questions in bank</span><span class="dos-row-dots"></span><span class="dos-row-val" id="stat-qs">—</span></div>
   <div class="dos-row"><span class="dos-row-label">total submissions</span><span class="dos-row-dots"></span><span class="dos-row-val" id="stat-attempts">—</span></div>
   <div class="dos-row"><span class="dos-row-label">unique miners</span><span class="dos-row-dots"></span><span class="dos-row-val" id="stat-miners">—</span></div>
   <div class="dos-row"><span class="dos-row-label">distributed</span><span class="dos-row-dots"></span><span class="dos-row-val-green" id="stat-distributed">— LFEP</span></div>
