@@ -222,7 +222,19 @@ async def get_question(req: GetQuestionReq):
     addr = _normalize_addr(req.address)
     if db.question_count() == 0:
         raise HTTPException(503, "question bank not seeded")
-    q = db.random_question()
+
+    # Difficulty-by-streak: ramp up at streak positions 7→8 and 8→9 to gate
+    # the streak bonus behind questions that require real computation rather
+    # than pattern-matching. The 10th claim itself stays normal.
+    row = db.get_streak_row(addr)
+    streak = row["current_streak"] if row else 0
+    if streak == 7:
+        diffs = [4]                # the 8th submission of the streak
+    elif streak == 8:
+        diffs = [5]                # the 9th — hardest
+    else:
+        diffs = [1, 2, 3]
+    q = db.random_question_by_difficulty(diffs)
     if q is None:
         raise HTTPException(500, "no questions")
 

@@ -99,6 +99,22 @@ def random_question() -> sqlite3.Row | None:
         return c.fetchone()
 
 
+def random_question_by_difficulty(difficulties: list[int]) -> sqlite3.Row | None:
+    """Pick a random question whose difficulty is in `difficulties`.
+    Falls back to ANY question if no questions exist at the requested level."""
+    if not difficulties:
+        return random_question()
+    placeholders = ",".join("?" * len(difficulties))
+    with cursor() as c:
+        c.execute(
+            f"SELECT id, content, answer, difficulty FROM questions "
+            f"WHERE difficulty IN ({placeholders}) ORDER BY RANDOM() LIMIT 1",
+            tuple(difficulties),
+        )
+        row = c.fetchone()
+    return row or random_question()
+
+
 def get_question(qid: int) -> sqlite3.Row | None:
     with cursor() as c:
         c.execute(
