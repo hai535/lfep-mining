@@ -274,7 +274,10 @@ async function submitAnswer() {
     } else if (r.result === "correct") {
       msg = `<div class="result-correct">✓ correct — amount: ${fmtLfep(r.amount)} · streak: ${r.streak}/10</div>`;
     } else {
-      msg = `<div class="result-wrong">✗ wrong — correct: <code>${r.correctAnswer}</code> · consolation: ${fmtLfep(r.amount)}</div>`;
+      // Server runs closed-box: r.correctAnswer is null in production. We show
+      // it only if explicitly disclosed (LFEP_REVEAL_CORRECT_ANSWER=1 on backend).
+      const reveal = r.correctAnswer ? ` — canonical: <code>${r.correctAnswer}</code>` : "";
+      msg = `<div class="result-wrong">✗ wrong${reveal} · consolation: ${fmtLfep(r.amount)} · streak reset</div>`;
     }
     msg += `<div style="margin-top:6px;color:var(--gray);font-size:11px;font-family:var(--f-mono)">claim ticket signed (5min ttl) — click $ claim-reward to receive on chain.</div>`;
     ra.innerHTML = msg;

@@ -288,12 +288,18 @@ async def submit_answer(req: SubmitAnswerReq):
     # 6. sign EIP-712 ticket
     ticket = SIGNER.sign_ticket(addr, req.questionId, amount)
 
+    # Closed-box response: never leak the canonical answer on wrong submissions.
+    # A finite Q&A bank + answer-on-wrong reveal would let an attacker map the
+    # whole bank for ~2 USDC × N questions, then mine with 100% accuracy.
+    # Operators can re-enable disclosure for local debugging only by setting
+    # LFEP_REVEAL_CORRECT_ANSWER=1 in the env (off by default in production).
+    reveal = os.environ.get("LFEP_REVEAL_CORRECT_ANSWER", "0") == "1"
     return {
         "result": "correct" if correct else "wrong",
         "amount": str(amount),
         "streak": new_streak,
         "bonusTriggered": bonus,
-        "correctAnswer": None if correct else q["answer"],
+        "correctAnswer": (q["answer"] if (reveal and not correct) else None),
         "ticket": ticket,
     }
 
