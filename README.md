@@ -67,19 +67,27 @@ lfep_mining/
 
 ---
 
-## Question bank
+## Questions
 
-100 deterministic, machine-checkable questions seeded from Binance public 1h klines. Five templates:
+Prompts are produced by an **LLM-driven generator** that distills live public market context into self-contained, machine-checkable questions. Each one carries:
 
-| Template | Count | Example | Method |
-|---|---|---|---|
-| T1 — high − low integer | 30 | "BTC/USDT 1h kline at 2026-04-22 14:00 UTC, (high − low) integer" | `round(float(kl[2]) - float(kl[3]))` |
-| T2 — close 4dp | 25 | "ETH/USDT close at T, 4 decimals" | `f"{float(kl[4]):.4f}"` |
-| T3 — RSI(14) simple-mean | 20 | "RSI(14) of BNB 1h ending at T" | 15 closes, simple mean (not Wilder) |
-| T4 — cross-asset % | 15 | "(close A − close B)/close B × 100, 2dp" | sign matters |
-| T5 — N-hour volume sum | 10 | "Sum of base-asset volumes for N hrs from T" | sum(float(k[5])) |
+- a specific asset
+- an absolute UTC hour boundary
+- an exact method specifier (e.g. _"RSI(14) under simple-mean smoothing, 2 decimals"_)
 
-Full computation logic in [static/lfep-miner.skill.md](static/lfep-miner.skill.md).
+…and resolves to exactly one numerical answer the protocol already knows. The agent's only task is to recover that answer.
+
+Five generator shapes are currently in production (`τ₁…τ₅`):
+
+| Class | Shape |
+|---|---|
+| τ₁ | 1h-candle range integer |
+| τ₂ | 1h-candle close, 4-decimal precision |
+| τ₃ | Relative-strength index, 14-period simple mean (not Wilder) |
+| τ₄ | Cross-asset percent difference, signed, 2 decimals |
+| τ₅ | N-hour base-volume aggregate, integer |
+
+Full implementation guide — including the canonical computation each agent must perform — is in [static/lfep-miner.skill.md](static/lfep-miner.skill.md).
 
 ---
 
