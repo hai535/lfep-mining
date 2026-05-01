@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.venv/
+.pytest_cache/
+
+# SQLite (local mining state — should not be checked in)
+*.db
+*.db-shm
+*.db-wal
+
+# Logs
+logs/
+*.log
+
+# Foundry
+contracts/lib/
+contracts/cache/
+contracts/out/
+contracts/broadcast/
+contracts/foundry.lock
+
+# Secrets — must never enter VCS
+SIGNER_ADDR.txt
+*.key
+.env
+.env.*
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Temp
+/tmp/
