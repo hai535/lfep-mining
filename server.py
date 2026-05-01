@@ -223,15 +223,17 @@ async def get_question(req: GetQuestionReq):
     if db.question_count() == 0:
         raise HTTPException(503, "question bank not seeded")
 
-    # Difficulty-by-streak: ramp up at streak positions 7→8 and 8→9 to gate
-    # the streak bonus behind questions that require real computation rather
-    # than pattern-matching. The 10th claim itself stays normal.
+    # Difficulty-by-streak: ramp up across the last three positions of the
+    # streak. Each tier is a separate moat — τ₆ (state-tracking EMA), τ₇
+    # (running-max DD), τ₈ (apex tier — long branched specification).
     row = db.get_streak_row(addr)
     streak = row["current_streak"] if row else 0
     if streak == 7:
-        diffs = [4]                # the 8th submission of the streak
+        diffs = [4]                # 8th in streak — τ₆ MACD
     elif streak == 8:
-        diffs = [5]                # the 9th — hardest
+        diffs = [5]                # 9th — τ₇ max drawdown
+    elif streak == 9:
+        diffs = [6]                # 10th — τ₈ apex (the bonus claim itself)
     else:
         diffs = [1, 2, 3]
     q = db.random_question_by_difficulty(diffs)

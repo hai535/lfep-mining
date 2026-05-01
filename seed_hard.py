@@ -31,6 +31,7 @@ BNCE = "https://api.binance.com/api/v3/klines"
 
 D4_PER_RUN = 15
 D5_PER_RUN = 15
+D6_PER_RUN = 12
 
 
 def fetch(symbol: str, start_ms: int, limit: int) -> list[list]:
@@ -163,25 +164,113 @@ def gen_tau7() -> tuple[str, str]:
     return content, answer
 
 
+# ── τ₈ (d=6, apex tier): long branched specification with multiple traps ──
+#
+# Designed so that pattern-matching on the formula description fails — every
+# one of seven branch conditions has to be re-evaluated per pair, and the
+# wording deliberately places an unreachable case to test careful reading.
+# Smaller models without code execution accumulate errors across 23 pair
+# evaluations and miss the precision target. Frontier models with careful
+# code translation hit it.
+
+def transition_score(closes, opens, volumes):
+    """Sum of 23 pair-transition scores per the specification embedded in τ₈."""
+    n = len(closes)
+    if n != 24:
+        raise ValueError("expected 24 candles")
+    total = 0.0
+    for i in range(n - 1):
+        ci, oi = closes[i], opens[i]
+        cj, oj = closes[i+1], opens[i+1]
+        vi, vj = volumes[i], volumes[i+1]
+
+        i_bull = ci > oi
+        i_bear = ci < oi
+        i_doji = (ci == oi)
+        j_bull = cj > oj
+        j_bear = cj < oj
+        j_doji = (cj == oj)
+
+        # Doji on either end of the pair → 0
+        if i_doji or j_doji:
+            score = 0.0
+        elif i_bull and j_bull:
+            score = 1.0 if vj > vi else 0.5
+        elif i_bear and j_bear:
+            score = -1.0 if vj > vi else -0.5
+        elif (i_bull and j_bear) or (i_bear and j_bull):
+            score = 0.3
+        else:
+            # Unreachable given the bull/bear/doji partition above.
+            score = 0.0
+        total += score
+    return total
+
+
+def gen_tau8():
+    sym = random.choice(ASSETS)
+    t = random_past_hour()
+    # 24 closes ending at T → start = T - 23h
+    start_ms = int((t - dt.timedelta(hours=23)).timestamp() * 1000)
+    kls = fetch(sym, start_ms, 24)
+    if len(kls) < 24:
+        raise RuntimeError(f"only got {len(kls)} klines")
+    O = [float(k[1]) for k in kls]
+    C = [float(k[4]) for k in kls]
+    V = [float(k[5]) for k in kls]
+    val = transition_score(C, O, V)
+    answer = f"{val:.4f}"
+
+    content = (
+        f"In the 24 consecutive 1h klines for Binance {asset_name(sym)}/USDT ending "
+        f"with the kline starting at {fmt_ts(t)} (i.e. opens, closes and base-asset "
+        f"volumes from {fmt_ts(t - dt.timedelta(hours=23))} to {fmt_ts(t)} inclusive, "
+        f"indexed in chronological order i ∈ [0, 23]), define each candle's class:\n\n"
+        f"  bullish  if close[i] > open[i]\n"
+        f"  bearish  if close[i] < open[i]\n"
+        f"  doji     if close[i] == open[i]   (exact float equality after parsing)\n\n"
+        f"For each consecutive ordered pair (i, i+1) where i ∈ [0, 22], compute a "
+        f"transition score using these branches, evaluated in order. The first matching "
+        f"branch wins:\n\n"
+        f"  • +1.0 — if BOTH candles are bullish AND volume[i+1] > volume[i]\n"
+        f"  • +0.5 — if BOTH candles are bullish AND volume[i+1] ≤ volume[i]\n"
+        f"  • −1.0 — if BOTH candles are bearish AND volume[i+1] > volume[i]\n"
+        f"  • −0.5 — if BOTH candles are bearish AND volume[i+1] ≤ volume[i]\n"
+        f"  • +0.3 — if one candle is bullish and the other is bearish (either order)\n"
+        f"  •  0.0 — if either candle is a doji  (this rule overrides all others; "
+        f"it is the FIRST branch to evaluate, despite its position in this list)\n"
+        f"  •  0.0 — otherwise\n\n"
+        f"Return the sum of all 23 transition scores, rounded to 4 decimals (signed) = ?"
+    )
+    return content, answer
+
+
 def main() -> int:
     db.init_db()
     with db.cursor() as c:
         c.execute("SELECT difficulty, COUNT(*) FROM questions GROUP BY difficulty")
         existing = dict(c.fetchall())
-    if existing.get(4, 0) >= 10 and existing.get(5, 0) >= 10:
-        print(f"already seeded (d=4: {existing.get(4,0)}, d=5: {existing.get(5,0)}); skip")
+    if existing.get(4, 0) >= 10 and existing.get(5, 0) >= 10 and existing.get(6, 0) >= 10:
+        print(f"already seeded (d=4: {existing.get(4,0)}, d=5: {existing.get(5,0)}, d=6: {existing.get(6,0)}); skip")
         return 0
 
     random.seed(int(time.time()))
 
-    # Get the next available qid
     with db.cursor() as c:
         c.execute("SELECT COALESCE(MAX(id), 0) FROM questions")
         next_qid = c.fetchone()[0] + 1
 
-    inserted = {4: 0, 5: 0}
+    inserted = {4: 0, 5: 0, 6: 0}
     failed = 0
-    for diff, gen, count in [(4, gen_tau6, D4_PER_RUN), (5, gen_tau7, D5_PER_RUN)]:
+    plan = []
+    if existing.get(4, 0) < 10:
+        plan.append((4, gen_tau6, D4_PER_RUN))
+    if existing.get(5, 0) < 10:
+        plan.append((5, gen_tau7, D5_PER_RUN))
+    if existing.get(6, 0) < 10:
+        plan.append((6, gen_tau8, D6_PER_RUN))
+
+    for diff, gen, count in plan:
         for _ in range(count):
             try:
                 content, answer = gen()
@@ -194,7 +283,7 @@ def main() -> int:
                 failed += 1
                 print(f"  d={diff} FAILED: {e}", file=sys.stderr)
 
-    print(f"\ninserted d=4: {inserted[4]}  d=5: {inserted[5]}  failed: {failed}")
+    print(f"\ninserted  d=4: {inserted[4]}  d=5: {inserted[5]}  d=6: {inserted[6]}  failed: {failed}")
     print(f"total questions in bank: {db.question_count()}")
     return 0 if failed == 0 else 1
 
