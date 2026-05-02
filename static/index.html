@@ -431,7 +431,7 @@ from datetime import datetime, timezone
 from web3 import Web3
 from eth_account import Account
 
-API, RPC = "http://46.224.8.188:8078", "https://mainnet.base.org"
+API, RPC = "https://lfep.us", "https://mainnet.base.org"
 USDC = Web3.to_checksum_address(
   "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913")
 
@@ -465,7 +465,7 @@ while True:
 <div class="code-block">import { JsonRpcProvider, Wallet, Contract,
          MaxUint256 } from "ethers";
 
-const API = "http://46.224.8.188:8078";
+const API = "https://lfep.us";
 const wallet = new Wallet(process.env.AGENT_PK!,
   new JsonRpcProvider("https://mainnet.base.org"));
 

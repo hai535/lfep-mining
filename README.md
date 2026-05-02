@@ -13,7 +13,7 @@ submit fee                  2 USDC   (Base)
 USDC use of proceeds  80% LP / 20% buyback
 ```
 
-Live: <http://46.224.8.188:8078>
+Live: <https://lfep.us>
 
 ---
 
@@ -257,7 +257,7 @@ import requests, time
 from eth_account import Account
 from web3 import Web3
 
-API = "http://46.224.8.188:8078"
+API = "https://lfep.us"
 acct = Account.from_key(open("agent.key").read().strip())
 w3 = Web3(Web3.HTTPProvider("https://mainnet.base.org"))
 cfg = requests.get(f"{API}/api/contracts").json()

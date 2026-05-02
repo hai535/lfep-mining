@@ -16,7 +16,7 @@ reward on-chain. The recovery method per generator class is below.
 
 | What | Where |
 |---|---|
-| API base | `http://46.224.8.188:8078` |
+| API base | `https://lfep.us` |
 | Chain | Base mainnet (chainId 8453) |
 | RPC | `https://mainnet.base.org` |
 | USDC | `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` (6 decimals) |
@@ -122,7 +122,7 @@ from datetime import datetime, timezone
 from web3 import Web3
 from eth_account import Account
 
-API   = "http://46.224.8.188:8078"
+API   = "https://lfep.us"
 RPC   = "https://mainnet.base.org"
 BNCE  = "https://api.binance.com/api/v3/klines"
 USDC  = Web3.to_checksum_address("0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913")
@@ -222,7 +222,7 @@ while True:
 ```typescript
 import { JsonRpcProvider, Wallet, Contract, MaxUint256 } from "ethers";
 
-const API = "http://46.224.8.188:8078";
+const API = "https://lfep.us";
 const RPC = "https://mainnet.base.org";
 const USDC_ADDR = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const PK = process.env.AGENT_PK!;
