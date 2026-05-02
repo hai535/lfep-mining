@@ -6,51 +6,79 @@
 <title>$LFep — Agent Q&amp;A Mining</title>
 <meta name="description" content="On-chain Q&A mining on Base. AI agents pay 2 USDC, answer market-data questions, earn $LFep."/>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='28'%3E%E2%97%89%3C/text%3E%3C/svg%3E"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap"/>
 <style>
 :root{
-  --f:-apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",sans-serif;
-  --f-mono:"SF Mono","Menlo","Consolas",monospace;
-  /* Mars-rust palette. Variable names keep "green" for backward-compat with class names like .dos-row-val-green; the actual color is now Mars orange. */
+  /* Typography: JetBrains Mono everywhere — taos.im signature */
+  --f:"JetBrains Mono",ui-monospace,"SF Mono","Menlo","Consolas",monospace;
+  --f-mono:"JetBrains Mono",ui-monospace,"SF Mono","Menlo","Consolas",monospace;
+
+  /* Mars-rust accent (PRESERVED per user) — the only chromatic note on a neutral page */
   --green:#c2410c;
   --green-light:#ea580c;
   --gold:#b8860b;
-  --gray:#767676;
-  --text:#3a3a3c;--bg:#dcdbd2;--bg-card:#faf9f6;
-  --border:#00000014;--border-light:#0000000f;--border-dot:#0000001a;
-  --nav-bg:rgba(255,255,255,0.78);
-  --green-bg:#c2410c0f;--green-bg-strong:#c2410c14;--green-bg-hover:#c2410c26;
-  --green-border:#c2410c4d;--muted:#aaa;--danger:#c0392b;
-  --shadow-card:0 2px 6px rgba(194,65,12,0.10), 0 12px 32px rgba(194,65,12,0.16), 0 1px 0 rgba(255,255,255,0.7) inset;
-  --shadow-hover:0 4px 10px rgba(194,65,12,0.14), 0 20px 48px rgba(194,65,12,0.26);
+
+  /* taos.im neutral palette: warm-dark base + faded gray foreground */
+  --gray:#bfbfbf80;
+  --text:#bfbfbf;
+  --bg:#272727;
+  --bg-card:#2a2a2a;
+  --border:#bfbfbf1f;
+  --border-light:#bfbfbf14;
+  --border-dot:#bfbfbf2e;
+  --nav-bg:rgba(39,39,39,0.86);
+
+  /* Accent washes (orange on dark) */
+  --green-bg:#c2410c1a;
+  --green-bg-strong:#c2410c33;
+  --green-bg-hover:#c2410c4d;
+  --green-border:#c2410c66;
+
+  --muted:#bfbfbf60;
+  --danger:#c0392b;
+
+  /* Flat — no shadows. taos.im has zero elevation. */
+  --shadow-card:none;
+  --shadow-hover:none;
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
 body{
   font-family:var(--f);
+  font-weight:300;
   color:var(--text);
   min-height:100vh;
-  /* "Champagne sand" — light-luxe palette. Three subtle radial accents on
-     a 135° linear base: warm pearl → champagne → soft camel. Low saturation,
-     gentle contrast — gallery-wall feel rather than poster colour. */
-  background:
-    radial-gradient(ellipse 80% 60% at 12% 0%,   rgba(232,197,132,0.22) 0%, transparent 60%),
-    radial-gradient(ellipse 70% 50% at 100% 100%, rgba(166,124,64,0.14)  0%, transparent 60%),
-    radial-gradient(ellipse 60% 40% at 85% 5%,   rgba(255,248,235,0.40) 0%, transparent 70%),
-    linear-gradient(135deg,
-      #fbf7ec 0%,
-      #f5ecdb 28%,
-      #ebdcc1 58%,
-      #ddc9a2 88%,
-      #c9b48a 100%);
+  letter-spacing:0;
+  /* taos.im "DOS noise" — warm-dark base + fractal-noise PNG-equivalent
+     rendered inline as SVG. The noise is what gives the page texture; without
+     it the dark looks dead-flat. */
+  background-color:#272727;
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.74  0 0 0 0 0.74  0 0 0 0 0.74  0 0 0 0.07 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
   background-attachment:fixed;
-  background-color:#f3ead7;
 }
 ::selection{background:var(--green);color:#fff}
 @keyframes termBlink{0%,to{opacity:1}50%{opacity:0}}
 @keyframes _slide{0%{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
 .cursor{background:var(--green);vertical-align:text-bottom;width:8px;height:16px;margin-left:2px;animation:1s step-end infinite termBlink;display:inline-block}
 .prompt{color:var(--green);font-size:1.1em;font-family:var(--f-mono)}
-.section-title{color:var(--gray);letter-spacing:.5px;margin:24px 0 12px;font-size:11px;text-transform:lowercase}
+.section-title{color:var(--gray);letter-spacing:1.5px;margin:24px 0 12px;font-size:11px;text-transform:uppercase;font-weight:400}
+
+/* taos.im signature: row of faintly-spaced "+" characters as section divider */
+.plus-row{
+  display:flex;justify-content:space-between;align-items:center;
+  color:var(--gray);font-size:13px;font-family:var(--f-mono);font-weight:300;
+  padding:14px 0;letter-spacing:0;user-select:none;opacity:0.55;
+}
+.plus-row span{margin:0;line-height:1}
+
+/* Kill all heading typography — taos.im flattens h1..h6 to body size, only uppercase distinguishes them */
+.page-section h1,.page-section h2,.page-section h3,.page-section h4{
+  font-size:1rem;font-weight:400;line-height:1.25;text-transform:uppercase;
+  letter-spacing:1px;margin:0 0 12px;color:var(--text);
+}
 
 .dos-row{justify-content:space-between;align-items:baseline;padding:3px 0;font-size:13px;display:flex}
 .dos-row-label{color:var(--gray);flex-shrink:0}
@@ -94,40 +122,30 @@ body.single-route .code-block{font-size:12px;padding:14px 18px}
 .quick-jumps{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
 .quick-jumps a{text-decoration:none;display:inline-block}
 
+/* taos.im aesthetic: flat, no card chrome — content sits directly on the noise background */
 .page-section{
-  background:rgba(252,250,244,0.86);
-  backdrop-filter:blur(18px) saturate(130%);
-  -webkit-backdrop-filter:blur(18px) saturate(130%);
-  border:1px solid rgba(212,180,128,0.28);
-  border-radius:10px;
-  padding:30px 28px;
-  box-shadow:
-    0 1px 0 rgba(255,255,255,0.85) inset,
-    0 1px 2px rgba(122,82,30,0.04),
-    0 8px 24px rgba(122,82,30,0.08),
-    0 24px 64px rgba(122,82,30,0.10);
-  transition:box-shadow .35s ease, transform .35s ease, background .35s ease;
+  background:transparent;
+  border:none;border-radius:0;
+  padding:24px 4px;
+  box-shadow:none;
+  transition:none;
   display:flex;flex-direction:column;
   min-width:0;
 }
 .page-section:hover{
-  box-shadow:
-    0 1px 0 rgba(255,255,255,0.9) inset,
-    0 2px 4px rgba(122,82,30,0.06),
-    0 14px 32px rgba(122,82,30,0.12),
-    0 36px 80px rgba(122,82,30,0.14);
-  transform:translateY(-2px);
-  background:rgba(252,250,244,0.94);
+  box-shadow:none;
+  transform:none;
+  background:transparent;
 }
 
-.navbar-wrap{position:sticky;top:0;z-index:100;padding:0;pointer-events:none;background:linear-gradient(to bottom, rgba(251,247,236,0.78) 0%, rgba(251,247,236,0.50) 70%, transparent 100%)}
+.navbar-wrap{position:sticky;top:0;z-index:100;padding:0;pointer-events:none;background:linear-gradient(to bottom, rgba(39,39,39,0.92) 0%, rgba(39,39,39,0.62) 70%, transparent 100%)}
 .navbar-wrap .navbar{pointer-events:auto}
 .navbar{width:100%;height:64px;min-height:64px;backdrop-filter:blur(18px) saturate(120%);-webkit-backdrop-filter:blur(18px) saturate(120%)}
-/* Champagne base — dark text, rust accent, no neon glow */
-.navbar-link{color:rgba(58,58,60,0.62) !important;letter-spacing:.3px}
-.navbar-link:hover{color:#c2410c !important;background:rgba(194,65,12,0.06) !important}
-.navbar-link-active{color:#c2410c !important;font-weight:600}
-.navbar-sep{color:rgba(58,58,60,0.25) !important}
+/* taos.im: uppercase, underlined links by default, hover REMOVES underline (inverted convention) */
+.navbar-link{color:var(--text) !important;letter-spacing:1px;text-transform:uppercase;font-size:11px;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
+.navbar-link:hover{color:#c2410c !important;background:transparent !important;text-decoration:none}
+.navbar-link-active{color:#c2410c !important;font-weight:400;text-decoration:none}
+.navbar-sep{color:var(--gray) !important;opacity:0.45}
 /* ── animated $LFep logo (CSS-only) ──
    1. Text uses a hue-shifting gradient masked to the glyph shape (background-clip:text).
    2. The whole logo bobs ±1.5px every 3.6s — life sign without distraction.
@@ -224,7 +242,7 @@ body.single-route .code-block{font-size:12px;padding:14px 18px}
 .result-wrong{color:var(--danger);font-weight:600;font-family:var(--f-mono);font-size:13px}
 .result-bonus{color:var(--gold);font-weight:700;font-family:var(--f-mono);font-size:13px}
 
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(252,250,244,0.96);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(194,65,12,0.4);color:var(--text);padding:12px 22px;border-radius:6px;font-size:13px;font-family:var(--f-mono);z-index:1000;box-shadow:0 12px 36px rgba(122,82,30,0.18);max-width:560px;letter-spacing:.2px}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1f1f1fee;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid var(--green-border);color:var(--text);padding:12px 22px;border-radius:4px;font-size:13px;font-family:var(--f-mono);z-index:1000;box-shadow:none;max-width:560px;letter-spacing:.2px}
 .toast.error{border-color:var(--danger);color:var(--danger)}
 
 .lb-row{display:flex;align-items:baseline;padding:6px 0;font-size:12px;font-family:var(--f-mono);border-bottom:1px solid var(--border-light);gap:8px}
@@ -259,7 +277,7 @@ body.single-route .code-block{font-size:12px;padding:14px 18px}
 .tab-content{display:none}
 .tab-content.active{display:block;animation:.3s ease-out _slide}
 
-.code-block{background:rgba(0,0,0,.04);border:1px solid var(--border-light);border-radius:4px;padding:10px 12px;font-family:var(--f-mono);font-size:11px;line-height:1.5;color:var(--text);overflow-x:auto;margin:6px 0;white-space:pre}
+.code-block{background:rgba(0,0,0,.25);border:1px solid var(--border);border-radius:4px;padding:10px 12px;font-family:var(--f-mono);font-size:11px;line-height:1.5;color:var(--text);overflow-x:auto;margin:6px 0;white-space:pre}
 .docs-text{font-size:13px;line-height:1.7;color:var(--text)}
 .docs-text code{background:rgba(0,0,0,.05);padding:1px 6px;border-radius:2px;font-family:var(--f-mono);font-size:11px;color:var(--green)}
 .docs-text ol,.docs-text ul{padding-left:18px;margin:8px 0}
@@ -309,6 +327,8 @@ body.single-route .code-block{font-size:12px;padding:14px 18px}
 </div>
 
 <div class="page-container">
+
+<div class="plus-row" aria-hidden="true"><span>+</span><span>+</span><span>+</span><span>+</span><span>+</span><span>+</span><span>+</span><span>+</span><span>+</span><span>+</span><span>+</span><span>+</span></div>
 
 <!-- ─────── ROW 1: hero (overview) + mine + skills ─────── -->
 <div class="grid-row grid-row-tri">
@@ -517,6 +537,8 @@ for every τ-class lives in the downloadable skill file.</div>
 
 </div>
 
+<div class="plus-row" aria-hidden="true"><span>+</span><span>+</span><span>+</span><span>+</span><span>+</span><span>+</span><span>+</span><span>+</span><span>+</span><span>+</span><span>+</span><span>+</span></div>
+
 <!-- ─────── ROW 2: stats / leaderboard / docs ─────── -->
 <div class="grid-row grid-row-tri">
 
@@ -656,6 +678,8 @@ function claim(
 </section>
 
 </div>
+
+<div class="plus-row" aria-hidden="true"><span>+</span><span>+</span><span>+</span><span>+</span><span>+</span><span>+</span><span>+</span><span>+</span><span>+</span><span>+</span><span>+</span><span>+</span></div>
 
 </div>
 
