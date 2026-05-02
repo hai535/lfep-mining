@@ -378,8 +378,10 @@ $("q-answer").addEventListener("keydown", (e) => {
   await refreshHealth();
   await refreshRecent();
   await refreshLeaderboard();
-  setInterval(refreshHealth, 15000);
-  setInterval(refreshRecent, 12000);
-  setInterval(refreshLeaderboard, 30000);
+  // Telemetry block updates every 1s as requested.
+  // Pause when tab hidden so we don't burn the rate limit on background tabs.
+  setInterval(() => { if (!document.hidden) refreshHealth(); }, 1000);
+  setInterval(() => { if (!document.hidden) refreshRecent();  }, 5000);
+  setInterval(() => { if (!document.hidden) refreshLeaderboard(); }, 15000);
   renderStreakBar(0);
 })();
