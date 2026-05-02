@@ -91,22 +91,6 @@ async function loadConfig() {
   } catch (e) { console.error("loadConfig", e); }
 }
 
-// ---------- chain stats ----------
-async function refreshHealth() {
-  try {
-    const h = await apiGet("/api/health");
-    $("stat-qs").textContent = h.questions;
-    $("stat-attempts").textContent = h.totalAttempts.toLocaleString();
-    $("stat-distributed").textContent = fmtLfep(h.totalDistributedWei);
-    $("stat-remaining").textContent = fmtLfep(h.miningPoolRemainingWei);
-    const total = BigInt(h.miningPoolTotalWei);
-    const used = BigInt(h.totalDistributedWei);
-    const pct = total > 0n ? Number((used * 10000n) / total) / 100 : 0;
-    $("pool-fill").style.width = Math.min(100, pct).toFixed(2) + "%";
-    $("pool-pct").textContent = pct.toFixed(3) + "% used";
-  } catch (e) { console.error(e); }
-}
-
 // ---------- recent activity ----------
 async function refreshRecent() {
   try {
@@ -284,7 +268,6 @@ async function submitAnswer() {
     ra.style.display = "block";
     $("claim-btn").style.display = "inline-block";
     refreshMyStats();
-    refreshHealth();
     refreshRecent();
   } catch (e) {
     console.error(e);
@@ -374,10 +357,8 @@ $("q-answer").addEventListener("keydown", (e) => {
 (async () => {
   applyRoute();   // resolve initial hash before first paint
   await loadConfig();
-  await refreshHealth();
   await refreshRecent();
   await refreshLeaderboard();
-  setInterval(refreshHealth, 15000);
   setInterval(refreshRecent, 12000);
   setInterval(refreshLeaderboard, 30000);
   renderStreakBar(0);
