@@ -188,6 +188,7 @@ async def health():
         "ok": True,
         "questions": db.question_count(),
         "totalAttempts": db.total_attempts(),
+        "uniqueMiners": db.total_miners(),
         "totalDistributedWei": str(db.total_distributed_wei()),
         "miningPoolTotalWei": str(MINING_POOL_TOTAL_WEI),
         "miningPoolRemainingWei": str(max(0, MINING_POOL_TOTAL_WEI - db.total_distributed_wei())),

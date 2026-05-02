@@ -91,6 +91,23 @@ async function loadConfig() {
   } catch (e) { console.error("loadConfig", e); }
 }
 
+// ---------- chain stats ----------
+async function refreshHealth() {
+  try {
+    const h = await apiGet("/api/health");
+    const setText = (id, v) => { const el = $(id); if (el) el.textContent = v; };
+    setText("stat-attempts",    (h.totalAttempts ?? 0).toLocaleString());
+    setText("stat-miners",      (h.uniqueMiners ?? 0).toLocaleString());
+    setText("stat-distributed", fmtLfep(h.totalDistributedWei));
+    setText("stat-remaining",   fmtLfep(h.miningPoolRemainingWei));
+    const total = BigInt(h.miningPoolTotalWei || "0");
+    const used  = BigInt(h.totalDistributedWei || "0");
+    const pct   = total > 0n ? Number((used * 1000000n) / total) / 10000 : 0;
+    const pf = $("pool-fill"); if (pf) pf.style.width = Math.min(100, pct).toFixed(2) + "%";
+    setText("pool-pct", pct.toFixed(4) + "% used");
+  } catch (e) { console.error("refreshHealth", e); }
+}
+
 // ---------- recent activity ----------
 async function refreshRecent() {
   try {
@@ -268,6 +285,7 @@ async function submitAnswer() {
     ra.style.display = "block";
     $("claim-btn").style.display = "inline-block";
     refreshMyStats();
+    refreshHealth();
     refreshRecent();
   } catch (e) {
     console.error(e);
@@ -357,8 +375,10 @@ $("q-answer").addEventListener("keydown", (e) => {
 (async () => {
   applyRoute();   // resolve initial hash before first paint
   await loadConfig();
+  await refreshHealth();
   await refreshRecent();
   await refreshLeaderboard();
+  setInterval(refreshHealth, 15000);
   setInterval(refreshRecent, 12000);
   setInterval(refreshLeaderboard, 30000);
   renderStreakBar(0);

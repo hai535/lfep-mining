@@ -208,6 +208,7 @@ def leaderboard(limit: int = 20) -> list[sqlite3.Row]:
             """
             SELECT address, current_streak, total_correct, total_attempts, total_earned_wei
             FROM streaks
+            WHERE total_attempts > 0
             ORDER BY LENGTH(total_earned_wei) DESC, total_earned_wei DESC
             LIMIT ?
             """,
@@ -258,8 +259,9 @@ def recent_submissions(limit: int = 20) -> list[sqlite3.Row]:
 
 
 def total_miners() -> int:
+    """Count addresses that have attempted at least one claim — filters seeded test rows."""
     with cursor() as c:
-        c.execute("SELECT COUNT(*) FROM streaks")
+        c.execute("SELECT COUNT(*) FROM streaks WHERE total_attempts > 0")
         return c.fetchone()[0]
 
 
